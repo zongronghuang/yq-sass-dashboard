@@ -3,5 +3,9 @@ import type { StringFormDataEntry } from "../types";
 
 export const AuthContext = createContext({
   userEmail: "",
-  handleUserEmail: (userEmail: StringFormDataEntry) => {},
+  // underscored unused params escape TypeScript's check
+  // void unused params escape ESLint's check
+  handleUserEmail: (_userEmail: StringFormDataEntry) => {
+    void _userEmail;
+  },
 });
