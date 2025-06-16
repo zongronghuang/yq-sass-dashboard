@@ -1,3 +1,5 @@
+import { TOKEN_KEY } from "../constants";
+
 export const validateEmail = (email: FormDataEntryValue | null) => {
   if (!email || typeof email !== "string") return false;
 
@@ -10,4 +12,9 @@ export const validatePassword = (password: FormDataEntryValue | null) => {
 
   const passwordRegex = /^[0-9a-zA-Z]+$/;
   return passwordRegex.test(password);
+};
+
+export const getToken = () => {
+  const token = localStorage.getItem(TOKEN_KEY);
+  return token;
 };
