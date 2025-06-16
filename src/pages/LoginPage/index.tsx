@@ -1,5 +1,6 @@
 import { useState, use } from "react";
 import { useFormStatus } from "react-dom";
+import { useNavigate } from "react-router";
 import clsx from "clsx";
 import {
   FormControl,
@@ -25,6 +26,7 @@ export default function LoginPage() {
   const [isPwdVisible, setIsPwdVisible] = useState(false);
   const [hasError, setHasError] = useState(false);
   const { handleUserEmail } = use(AuthContext);
+  const navigate = useNavigate();
 
   async function loginAction(formData: FormData) {
     try {
@@ -44,7 +46,10 @@ export default function LoginPage() {
       if (!res?.ok)
         throw new Error(`Request status: ${res?.status} | ${res?.statusText}`);
       const data = await res?.json();
-      if (data) handleUserEmail(email);
+      if (data) {
+        handleUserEmail(email);
+        navigate("/data");
+      }
     } catch (error: any) {
       console.log(`[Login: ${error.name}] ${error.message}`);
       setHasError(true);
