@@ -17,6 +17,7 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import { AuthContext } from "../../contexts/AuthContext";
 import type { StringFormDataEntry } from "../../types";
+import { simulatedPause } from "../../mocks";
 import { fetchData } from "../../apis";
 import { validateEmail, validatePassword } from "../../utils";
 
@@ -27,24 +28,23 @@ export default function LoginPage() {
 
   async function loginAction(formData: FormData) {
     try {
+      setHasError(false);
+
+      // validation
       const email = formData.get("email") as StringFormDataEntry;
       const password = formData.get("password") as StringFormDataEntry;
-
-      setHasError(false);
       if (!validateEmail(email) || !validatePassword(password))
         return setHasError(true);
 
-      await new Promise((resolve) => setTimeout(resolve, 3000));
+      await simulatedPause(3);
 
+      // send data to server
       const params = { email, password };
       const res = await fetchData(params);
       if (!res?.ok)
         throw new Error(`Request status: ${res?.status} | ${res?.statusText}`);
       const data = await res?.json();
-      console.log({ res, data });
-
-      //
-      handleUserEmail(email);
+      if (data) handleUserEmail(email);
     } catch (error: any) {
       console.log(`[Login: ${error.name}] ${error.message}`);
       setHasError(true);
