@@ -18,14 +18,14 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import { AuthContext } from "../../contexts/AuthContext";
 import type { StringFormDataEntry } from "../../types";
-import { simulatedPause } from "../../mocks";
+import { mockPause } from "../../mocks";
 import { fetchData } from "../../apis";
 import { validateEmail, validatePassword } from "../../utils";
 
 export default function LoginPage() {
   const [isPwdVisible, setIsPwdVisible] = useState(false);
   const [hasError, setHasError] = useState(false);
-  const { handleUserEmail } = use(AuthContext);
+  const { logIn } = use(AuthContext);
   const navigate = useNavigate();
 
   async function loginAction(formData: FormData) {
@@ -38,7 +38,7 @@ export default function LoginPage() {
       if (!validateEmail(email) || !validatePassword(password))
         return setHasError(true);
 
-      await simulatedPause(3);
+      await mockPause();
 
       // send data to server
       const params = { email, password };
@@ -47,7 +47,7 @@ export default function LoginPage() {
         throw new Error(`Request status: ${res?.status} | ${res?.statusText}`);
       const data = await res?.json();
       if (data) {
-        handleUserEmail(email);
+        logIn(email);
         navigate("/data");
       }
     } catch (error: any) {
