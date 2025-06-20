@@ -1,30 +1,22 @@
-import { useState, useEffect } from "react";
+import { use, useEffect, lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router";
 import DataPageLayout from "./layouts/DataPageLayout";
 import LoginPage from "./pages/LoginPage";
-import ActiveUsersPage from "./pages/ActiveUsersPage";
-import DailyStoreSectionPage from "./pages/DailyStoreSectionPage";
 import ProtectedRoute from "./components/ProtectedRoute";
+import GeneralSkeleton from "./components/GeneralSkeleton";
 import { AuthContext } from "./contexts/AuthContext";
-import { TOKEN_KEY, TOKEN_PREFIX, EMAIL_KEY } from "./constants";
+import AuthContextProvider from "./contexts/AuthContextProvider";
+import { APP_BASENAME } from "./constants";
 import { getToken } from "./utils";
-import type { StringFormDataEntry } from "./types";
 import "./App.css";
 
+const ActiveUsersPage = lazy(() => import("./pages/ActiveUsersPage"));
+const DailyStoreSectionPage = lazy(
+  () => import("./pages/DailyStoreSectionPage")
+);
+
 function App() {
-  const [userEmail, setUserEmail] = useState<StringFormDataEntry>("");
-
-  function logIn(userEmail: StringFormDataEntry) {
-    setUserEmail(userEmail);
-    localStorage.setItem(EMAIL_KEY, userEmail);
-    localStorage.setItem(TOKEN_KEY, TOKEN_PREFIX + Date.now());
-  }
-
-  function logOut() {
-    setUserEmail("");
-    localStorage.remove(EMAIL_KEY);
-    localStorage.removeItem(TOKEN_KEY);
-  }
+  const { logOut } = use(AuthContext);
 
   useEffect(() => {
     const token = getToken();
@@ -37,26 +29,31 @@ function App() {
     if (shouldForceLogout) {
       logOut();
     }
-  }, []);
+  }, [logOut]);
 
   return (
-    <BrowserRouter>
-      <AuthContext
-        value={{
-          userEmail,
-          logIn,
-          logOut,
-        }}
-      >
+    <BrowserRouter basename={APP_BASENAME}>
+      <AuthContextProvider>
         <Routes>
-          <Route index element={<LoginPage />} />
-          <Route path="login" element={<LoginPage />} />
-          <Route path="/" element={<ProtectedRoute />}>
-            <Route element={<DataPageLayout />}>
-              <Route path="data/active-users" element={<ActiveUsersPage />} />
+          <Route path="/" element={<LoginPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route element={<ProtectedRoute />}>
+            <Route path="/data" element={<DataPageLayout />}>
               <Route
-                path="data/daily-store-sections"
-                element={<DailyStoreSectionPage />}
+                path="active-users"
+                element={
+                  <Suspense fallback={<GeneralSkeleton />}>
+                    <ActiveUsersPage />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="daily-store-sections"
+                element={
+                  <Suspense fallback={<GeneralSkeleton />}>
+                    <DailyStoreSectionPage />
+                  </Suspense>
+                }
               />
             </Route>
           </Route>
@@ -70,7 +67,7 @@ function App() {
             }
           />
         </Routes>
-      </AuthContext>
+      </AuthContextProvider>
     </BrowserRouter>
   );
 }
