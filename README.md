@@ -1,54 +1,45 @@
-# React + TypeScript + Vite
+# Sass Dashboard
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+App URL: https://zongronghuang.github.io/yq-sass-dashboard/
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## How to Run This Project
 
-## Expanding the ESLint configuration
+1. Use the `.nvmrc` file to switch to Node.js version 22:
+   ```
+   nvm use
+   ```
+2. Install dependencies using pnpm:
+   ```
+   pnpm install
+   ```
+3. Start the development server:
+   ```
+   pnpm dev
+   ```
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+---
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
-```
+## Log In to the App
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+- **Email:** Use any valid email address (e.g., `example@example.com`).
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+- **Password:** Use any random combination of letters and numbers (`a-z`, `A-Z`, `0-9`), at least one character long.
 
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
-```
+---
+
+## Features
+
+### Mobile
+
+- Open the side bar by swiping from left to right or tapping the top-left menu icon.
+- Close the side bar by swiping left.
+- Tap on the side bar buttons to view different data sections.
+- Each data type supports two views: table view and chart view. Switch between them by tapping the top-right icon.
+- Tap the email displayed on the top bar to reveal a logout button.
+
+### Desktop
+
+- All mobile features are available on desktop.
+- Responsive design ensures a seamless experience across devices.
