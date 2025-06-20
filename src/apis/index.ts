@@ -8,8 +8,10 @@ export const fetchData = ({
 }: {
   email: FormDataEntryValue;
   password: FormDataEntryValue;
-}) =>
-  request({
+}) => {
+  void email;
+  void password;
+  return request({
     url: "https://jsonplaceholder.typicode.com/posts",
     method: "POST",
     options: {
@@ -19,6 +21,7 @@ export const fetchData = ({
       },
     },
   });
+};
 
 export const fetchActiveUsers = () =>
   request({

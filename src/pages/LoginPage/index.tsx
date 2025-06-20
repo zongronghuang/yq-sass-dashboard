@@ -43,9 +43,10 @@ export default function LoginPage() {
       if (!res?.ok)
         throw new Error(`Request status: ${res?.status} | ${res?.statusText}`);
       const data = await res?.json();
+
       if (data) {
         logIn(email);
-        navigate("/data");
+        navigate("/data/active-users");
       }
     } catch (error: any) {
       console.error(`[Login: ${error.name}] ${error.message}`);
@@ -61,7 +62,7 @@ export default function LoginPage() {
         className="p-4 w-xs sm:w-xl sm:p-8 bg-white/90 backdrop-blur-md shadow-lg rounded-xl"
       >
         <fieldset className="flex flex-col justify-between gap-10 mb-5">
-          <legend className="text-center mb-5 font-semibold text-2xl sm:text-4xl">
+          <legend className="text-center mb-5 font-semibold text-2xl sm:text-4xl sm:mb-8">
             Log In
           </legend>
 
