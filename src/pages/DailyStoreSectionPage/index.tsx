@@ -1,7 +1,14 @@
-import { useRef, useState, useMemo, useEffect, type ChangeEvent } from "react";
+import {
+  useRef,
+  useState,
+  useMemo,
+  useEffect,
+  lazy,
+  Suspense,
+  type ChangeEvent,
+} from "react";
 import clsx from "clsx";
 import { IconButton, Menu, MenuItem, Paper } from "@mui/material";
-import { BarChart } from "@mui/x-charts";
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
 import TableCell from "@mui/material/TableCell";
@@ -13,9 +20,14 @@ import TableSortLabel from "@mui/material/TableSortLabel";
 import TableChartIcon from "@mui/icons-material/TableChart";
 import TableViewIcon from "@mui/icons-material/TableView";
 import BarChartIcon from "@mui/icons-material/BarChart";
+import ChartSkeleton from "../../components/GeneralSkeleton";
 import { getToken } from "../../utils";
 import { fetchDailyStoreSections } from "../../apis";
 import { mockDailyStoreSectionData } from "../../mocks";
+
+const DailyStoreSectionChart = lazy(
+  () => import("../../components/DailyStoreSectionChart")
+);
 
 export default function DailyStoreSectionPage() {
   const anchorRef = useRef<null | HTMLButtonElement>(null);
@@ -38,7 +50,7 @@ export default function DailyStoreSectionPage() {
             `Request status: ${res?.status} | ${res?.statusText}`
           );
         const data = await res?.json();
-        console.log("store", { res, data });
+
         if (data) setDailyStoreData(mockDailyStoreSectionData);
       } catch (error: any) {
         console.error(`[Request: ${error.name}] ${error.message}`);
@@ -69,7 +81,6 @@ export default function DailyStoreSectionPage() {
           open={openMenu}
           anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
           onClose={() => {
-            console.log("close menu");
             setOpenMenu(false);
           }}
         >
@@ -93,13 +104,16 @@ export default function DailyStoreSectionPage() {
           </MenuItem>
         </Menu>
       </header>
-      <main className="flex justify-center py-9 px-1 sm:px-3 ">
+      <main className="flex justify-center py-9 px-1 sm:px-3">
         {activeView === "table" && (
           <DataTable dailyStoreData={dailyStoreData} />
         )}
-        {activeView === "chart" && (
-          <DataChart dailyStoreData={dailyStoreData} />
-        )}
+
+        <Suspense fallback={<ChartSkeleton />}>
+          {activeView === "chart" && (
+            <DailyStoreSectionChart dailyStoreData={dailyStoreData} />
+          )}
+        </Suspense>
       </main>
     </div>
   );
@@ -231,53 +245,6 @@ function DataTable({
           setRowsPerPage(+event.target.value);
           setPage(0);
         }}
-      />
-    </Paper>
-  );
-}
-
-function DataChart({
-  dailyStoreData,
-}: {
-  dailyStoreData: { [key: string]: any }[];
-}) {
-  const { locations, waitTime, customers, staff } = dailyStoreData.reduce(
-    (collection, { locationName, metrics }) => {
-      const { waitTimeSeconds, workForceUtilization } = metrics;
-      const { total, persons } = workForceUtilization;
-      collection.locations.push(locationName);
-      collection.waitTime.push(waitTimeSeconds);
-      collection.customers.push(total);
-      collection.staff.push(persons.length);
-      return collection;
-    },
-    { locations: [], waitTime: [], customers: [], staff: [] }
-  );
-
-  return (
-    <Paper className="grow-1 drop-shadow-lg">
-      <BarChart
-        sx={{ maxWidth: "800px", margin: "0 auto" }}
-        xAxis={[{ data: locations }]}
-        series={[
-          { data: waitTime, label: "Waiting time(s)", color: "lightblue" },
-        ]}
-        height={300}
-        barLabel="value"
-      />
-      <BarChart
-        sx={{ maxWidth: "800px", margin: "0 auto" }}
-        xAxis={[{ data: locations }]}
-        series={[{ data: customers, label: "Customers", color: "pink" }]}
-        height={300}
-        barLabel="value"
-      />
-      <BarChart
-        sx={{ maxWidth: "800px", margin: "0 auto" }}
-        xAxis={[{ data: locations }]}
-        series={[{ data: staff, label: "Staff", color: "darkseagreen" }]}
-        height={300}
-        barLabel="value"
       />
     </Paper>
   );

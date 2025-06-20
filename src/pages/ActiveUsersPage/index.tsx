@@ -1,8 +1,15 @@
-import { useRef, useState, useMemo, useEffect, type ChangeEvent } from "react";
+import {
+  useRef,
+  useState,
+  useMemo,
+  useEffect,
+  lazy,
+  Suspense,
+  type ChangeEvent,
+} from "react";
 import clsx from "clsx";
 import dayjs from "dayjs";
 import { IconButton, Menu, MenuItem, Paper } from "@mui/material";
-import { LineChart } from "@mui/x-charts/LineChart";
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
 import TableCell from "@mui/material/TableCell";
@@ -14,9 +21,14 @@ import TableSortLabel from "@mui/material/TableSortLabel";
 import TableChartIcon from "@mui/icons-material/TableChart";
 import TableViewIcon from "@mui/icons-material/TableView";
 import BarChartIcon from "@mui/icons-material/BarChart";
+import ChartSkeleton from "../../components/GeneralSkeleton";
 import { mockActiveUsers } from "../../mocks";
 import { getToken } from "../../utils";
 import { fetchActiveUsers } from "../../apis";
+
+const ActiveUsersChart = lazy(
+  () => import("../../components/ActiveUsersChart")
+);
 
 export default function ActiveUsersPage() {
   const anchorRef = useRef<null | HTMLButtonElement>(null);
@@ -63,7 +75,6 @@ export default function ActiveUsersPage() {
           open={openMenu}
           anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
           onClose={() => {
-            console.log("close menu");
             setOpenMenu(false);
           }}
         >
@@ -87,9 +98,14 @@ export default function ActiveUsersPage() {
           </MenuItem>
         </Menu>
       </header>
-      <main className="flex justify-center  py-9 px-1 sm:px-3">
+      <main className="flex justify-center py-9 px-1 sm:px-3">
         {activeView === "table" && <DataTable activeUsers={activeUsers} />}
-        {activeView === "chart" && <DataChart activeUsers={activeUsers} />}
+
+        <Suspense fallback={<ChartSkeleton />}>
+          {activeView === "chart" && (
+            <ActiveUsersChart activeUsers={activeUsers} />
+          )}
+        </Suspense>
       </main>
     </div>
   );
@@ -190,29 +206,29 @@ function DataTable({ activeUsers }: { activeUsers: any[] }) {
   );
 }
 
-function DataChart({ activeUsers }: { activeUsers: any[] }) {
-  const { xData, yData } = activeUsers.reduce(
-    (collection, user) => {
-      collection.xData.push(Date.parse(user.timeBucket));
-      collection.yData.push(user.value);
-      return collection;
-    },
-    { xData: [], yData: [] }
-  );
+// function DataChart({ activeUsers }: { activeUsers: any[] }) {
+//   const { xData, yData } = activeUsers.reduce(
+//     (collection, user) => {
+//       collection.xData.push(Date.parse(user.timeBucket));
+//       collection.yData.push(user.value);
+//       return collection;
+//     },
+//     { xData: [], yData: [] }
+//   );
 
-  return (
-    <Paper className="grow-1 drop-shadow-lg">
-      <LineChart
-        xAxis={[
-          {
-            data: xData,
-            valueFormatter: (value: string) =>
-              new Date(value).toLocaleDateString(),
-          },
-        ]}
-        series={[{ data: yData }]}
-        height={300}
-      />
-    </Paper>
-  );
-}
+//   return (
+//     <Paper className="grow-1 drop-shadow-lg">
+//       <LineChart
+//         xAxis={[
+//           {
+//             data: xData,
+//             valueFormatter: (value: string) =>
+//               new Date(value).toLocaleDateString(),
+//           },
+//         ]}
+//         series={[{ data: yData }]}
+//         height={300}
+//       />
+//     </Paper>
+//   );
+// }
