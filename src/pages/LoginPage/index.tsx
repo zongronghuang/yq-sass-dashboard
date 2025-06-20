@@ -18,7 +18,6 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import { AuthContext } from "../../contexts/AuthContext";
 import type { StringFormDataEntry } from "../../types";
-import { mockPause } from "../../mocks";
 import { fetchData } from "../../apis";
 import { validateEmail, validatePassword } from "../../utils";
 
@@ -38,8 +37,6 @@ export default function LoginPage() {
       if (!validateEmail(email) || !validatePassword(password))
         return setHasError(true);
 
-      await mockPause();
-
       // send data to server
       const params = { email, password };
       const res = await fetchData(params);
@@ -51,33 +48,42 @@ export default function LoginPage() {
         navigate("/data");
       }
     } catch (error: any) {
-      console.log(`[Login: ${error.name}] ${error.message}`);
+      console.error(`[Login: ${error.name}] ${error.message}`);
       setHasError(true);
     }
   }
 
   return (
-    <div className="min-h-screen flex justify-center items-center px-2">
+    <div className="min-h-screen flex justify-center items-center px-2 bg-gradient-to-br from-blue-500 to-purple-700">
       <form
         action={loginAction}
         autoComplete="off"
-        className="border border-black rounded-xl p-4 w-xs"
+        className="p-4 w-xs sm:w-xl sm:p-8 bg-white/90 backdrop-blur-md shadow-lg rounded-xl"
       >
         <fieldset className="flex flex-col justify-between gap-10 mb-5">
-          <legend className="text-center mb-5 font-semibold text-2xl">
+          <legend className="text-center mb-5 font-semibold text-2xl sm:text-4xl">
             Log In
           </legend>
 
           <FormControl required className="w-full">
-            <InputLabel htmlFor="email" className="translate-x-[-14px]">
+            <InputLabel
+              htmlFor="email"
+              className="translate-x-[-14px] sm:!text-xl"
+            >
               <MailOutlineIcon /> Email
             </InputLabel>
             <Input type="email" id="email" name="email" autoComplete="off" />
           </FormControl>
 
-          <Tooltip title="Only 0-9, a-z, and A-Z are accepted">
+          <Tooltip
+            className="sm:!text-2xl"
+            title="Only 0-9, a-z, and A-Z are accepted"
+          >
             <FormControl required className="w-full">
-              <InputLabel htmlFor="password" className="translate-x-[-14px]">
+              <InputLabel
+                htmlFor="password"
+                className="translate-x-[-14px] sm:!text-xl"
+              >
                 <PasswordIcon /> Password
               </InputLabel>
               <Input
@@ -92,9 +98,9 @@ export default function LoginPage() {
                       edge="end"
                     >
                       {isPwdVisible ? (
-                        <VisibilityOffIcon />
+                        <VisibilityOffIcon className="sm:scale-125" />
                       ) : (
-                        <VisibilityIcon />
+                        <VisibilityIcon className="sm:scale-125" />
                       )}
                     </IconButton>
                   </InputAdornment>
@@ -122,7 +128,7 @@ function SubmitButton() {
     <button
       type="submit"
       disabled={pending}
-      className="w-3/5 h-[30px] flex justify-center items-center rounded-2xl bg-blue-500 disabled:opacity-50 mx-auto"
+      className="w-3/5 h-[30px] flex justify-center text-white font-semibold sm:text-2xl sm:h-12 items-center rounded-2xl sm:rounded-xl bg-blue-500 disabled:opacity-50 mx-auto"
     >
       {pending ? "Submitting..." : "Log in"}
     </button>

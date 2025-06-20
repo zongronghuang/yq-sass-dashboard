@@ -16,5 +16,5 @@ export const validatePassword = (password: FormDataEntryValue | null) => {
 
 export const getToken = () => {
   const token = localStorage.getItem(TOKEN_KEY);
-  return token;
+  return token || "";
 };

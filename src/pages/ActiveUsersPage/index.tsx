@@ -1,6 +1,8 @@
-import { useRef, useState, useMemo, type ChangeEvent } from "react";
+import { useRef, useState, useMemo, useEffect, type ChangeEvent } from "react";
 import clsx from "clsx";
+import dayjs from "dayjs";
 import { IconButton, Menu, MenuItem, Paper } from "@mui/material";
+import { LineChart } from "@mui/x-charts/LineChart";
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
 import TableCell from "@mui/material/TableCell";
@@ -13,22 +15,45 @@ import TableChartIcon from "@mui/icons-material/TableChart";
 import TableViewIcon from "@mui/icons-material/TableView";
 import BarChartIcon from "@mui/icons-material/BarChart";
 import { mockActiveUsers } from "../../mocks";
+import { getToken } from "../../utils";
+import { fetchActiveUsers } from "../../apis";
 
 export default function ActiveUsersPage() {
-  const anchorRef = useRef<null | HTMLElement>(null);
+  const anchorRef = useRef<null | HTMLButtonElement>(null);
   const [openMenu, setOpenMenu] = useState(false);
   const [activeView, setActiveView] = useState("table");
+  const [activeUsers, setActiveUsers] = useState<typeof mockActiveUsers>([]);
+
+  useEffect(() => {
+    fetchActiveUsersFn();
+
+    async function fetchActiveUsersFn() {
+      try {
+        if (!getToken()) return;
+
+        const res = await fetchActiveUsers();
+        if (!res?.ok)
+          throw new Error(
+            `Request status: ${res?.status} | ${res?.statusText}`
+          );
+        const data = await res?.json();
+        if (data) setActiveUsers(mockActiveUsers);
+      } catch (error: any) {
+        console.error(`[Request: ${error.name}] ${error.message}`);
+      }
+    }
+  }, []);
 
   return (
-    <div className="pt-14">
-      <header className="flex outline min-h-14 outline-black relative justify-center items-center">
-        <h1>Active Users</h1>
+    <div className="pt-14 sm:pl-[56px]">
+      <header className="flex bg-white h-14 relative justify-center items-center sm:h-18">
+        <h1 className="font-semibold text-xl sm:text-2x">Active Users</h1>
 
         <IconButton
+          ref={anchorRef}
+          component="button"
           className="!absolute top-2/4 right-2 -translate-y-6/12"
-          onClick={() => {
-            setOpenMenu(!openMenu);
-          }}
+          onClick={() => setOpenMenu(!openMenu)}
         >
           <TableChartIcon />
         </IconButton>
@@ -62,24 +87,26 @@ export default function ActiveUsersPage() {
           </MenuItem>
         </Menu>
       </header>
-
-      <DataTable />
+      <main className="flex justify-center  py-9 px-1 sm:px-3">
+        {activeView === "table" && <DataTable activeUsers={activeUsers} />}
+        {activeView === "chart" && <DataChart activeUsers={activeUsers} />}
+      </main>
     </div>
   );
 }
 
-function DataTable() {
+function DataTable({ activeUsers }: { activeUsers: any[] }) {
   const [sortCategory, setSortCategory] = useState("time_bucket");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const headCells = [
-    { id: "time_bucket", label: "Time Bucket" },
-    { id: "value", label: "Value" },
+    { id: "time_bucket", label: "Time" },
+    { id: "value", label: "Users" },
   ];
   const sortedRows = useMemo(
     () =>
-      [...mockActiveUsers].sort((a, b) => {
+      [...activeUsers].sort((a, b) => {
         if (sortCategory === "time_bucket") {
           return sortDirection === "asc"
             ? Date.parse(a.timeBucket) - Date.parse(b.timeBucket)
@@ -90,19 +117,20 @@ function DataTable() {
             : b.value - a.value;
         }
       }),
-    [sortCategory, sortDirection]
+    [sortCategory, sortDirection, activeUsers]
   );
 
   return (
-    <Paper>
-      <TableContainer sx={{ maxHeight: 530 }}>
+    <Paper className="grow-1 drop-shadow-lg">
+      <TableContainer className="max-h-[65vh]">
         <Table stickyHeader>
           <TableHead>
             <TableRow>
               {headCells.map((cell) => (
                 <TableCell
+                  className="sm:!text-lg"
                   key={cell.id}
-                  align="center"
+                  align="left"
                   sx={{ backgroundColor: "rgb(25, 118, 210)" }}
                 >
                   <TableSortLabel
@@ -134,9 +162,13 @@ function DataTable() {
             {sortedRows
               .slice(page * rowsPerPage, (page + 1) * rowsPerPage)
               .map((user) => (
-                <TableRow key={user.timeBucket}>
-                  <TableCell align="center">{user.timeBucket}</TableCell>
-                  <TableCell align="center">{user.value}</TableCell>
+                <TableRow key={user.timeBucket} className="hover:!bg-gray-100">
+                  <TableCell align="left" className="sm:!text-lg">
+                    {dayjs(user.timeBucket).format("YYYY-MM-DD (HH:mm:ss)")}
+                  </TableCell>
+                  <TableCell align="left" className="sm:!text-lg">
+                    {user.value}
+                  </TableCell>
                 </TableRow>
               ))}
           </TableBody>
@@ -147,12 +179,39 @@ function DataTable() {
         component="div"
         rowsPerPage={rowsPerPage}
         page={page}
-        count={mockActiveUsers.length}
+        count={activeUsers.length}
         onPageChange={(_event: unknown, newPage: number) => setPage(newPage)}
         onRowsPerPageChange={(event: ChangeEvent<HTMLInputElement>) => {
           setRowsPerPage(+event.target.value);
           setPage(0);
         }}
+      />
+    </Paper>
+  );
+}
+
+function DataChart({ activeUsers }: { activeUsers: any[] }) {
+  const { xData, yData } = activeUsers.reduce(
+    (collection, user) => {
+      collection.xData.push(Date.parse(user.timeBucket));
+      collection.yData.push(user.value);
+      return collection;
+    },
+    { xData: [], yData: [] }
+  );
+
+  return (
+    <Paper className="grow-1 drop-shadow-lg">
+      <LineChart
+        xAxis={[
+          {
+            data: xData,
+            valueFormatter: (value: string) =>
+              new Date(value).toLocaleDateString(),
+          },
+        ]}
+        series={[{ data: yData }]}
+        height={300}
       />
     </Paper>
   );

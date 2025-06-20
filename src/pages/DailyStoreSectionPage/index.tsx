@@ -1,6 +1,7 @@
-import { useRef, useState, useMemo, type ChangeEvent } from "react";
+import { useRef, useState, useMemo, useEffect, type ChangeEvent } from "react";
 import clsx from "clsx";
 import { IconButton, Menu, MenuItem, Paper } from "@mui/material";
+import { BarChart } from "@mui/x-charts";
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
 import TableCell from "@mui/material/TableCell";
@@ -12,19 +13,49 @@ import TableSortLabel from "@mui/material/TableSortLabel";
 import TableChartIcon from "@mui/icons-material/TableChart";
 import TableViewIcon from "@mui/icons-material/TableView";
 import BarChartIcon from "@mui/icons-material/BarChart";
+import { getToken } from "../../utils";
+import { fetchDailyStoreSections } from "../../apis";
 import { mockDailyStoreSectionData } from "../../mocks";
 
 export default function DailyStoreSectionPage() {
-  const anchorRef = useRef<null | HTMLElement>(null);
+  const anchorRef = useRef<null | HTMLButtonElement>(null);
   const [openMenu, setOpenMenu] = useState(false);
   const [activeView, setActiveView] = useState("table");
+  const [dailyStoreData, setDailyStoreData] = useState<
+    typeof mockDailyStoreSectionData
+  >([]);
+
+  useEffect(() => {
+    fetchDailyStoreSectionsFn();
+
+    async function fetchDailyStoreSectionsFn() {
+      try {
+        if (!getToken()) return;
+
+        const res = await fetchDailyStoreSections();
+        if (!res?.ok)
+          throw new Error(
+            `Request status: ${res?.status} | ${res?.statusText}`
+          );
+        const data = await res?.json();
+        console.log("store", { res, data });
+        if (data) setDailyStoreData(mockDailyStoreSectionData);
+      } catch (error: any) {
+        console.error(`[Request: ${error.name}] ${error.message}`);
+      }
+    }
+  }, []);
 
   return (
-    <div className="pt-14">
-      <header className="flex outline min-h-14 outline-black relative justify-center items-center">
-        <h1>Daily Store Section</h1>
+    <div className="pt-14 sm:pl-[56px]">
+      <header className="flex h-14 bg-white relative justify-center items-center  sm:h-18">
+        <h1 className="font-semibold text-xl sm:text-2x">
+          Daily Store Sections
+        </h1>
 
         <IconButton
+          ref={anchorRef}
+          component="button"
           className="!absolute top-2/4 right-2 -translate-y-6/12"
           onClick={() => {
             setOpenMenu(!openMenu);
@@ -62,25 +93,36 @@ export default function DailyStoreSectionPage() {
           </MenuItem>
         </Menu>
       </header>
-      <DataTable />
+      <main className="flex justify-center py-9 px-1 sm:px-3 ">
+        {activeView === "table" && (
+          <DataTable dailyStoreData={dailyStoreData} />
+        )}
+        {activeView === "chart" && (
+          <DataChart dailyStoreData={dailyStoreData} />
+        )}
+      </main>
     </div>
   );
 }
 
-function DataTable() {
+function DataTable({
+  dailyStoreData,
+}: {
+  dailyStoreData: { [key: string]: any }[];
+}) {
   const [sortCategory, setSortCategory] = useState("time_bucket");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const headCells = [
-    { id: "location", label: "Location" },
+    { id: "location", label: "Area" },
     { id: "wait", label: "Wait(s)" },
     { id: "total", label: "People" },
     { id: "staff", label: "Staff" },
   ];
   const sortedRows = useMemo(
     () =>
-      [...mockDailyStoreSectionData].sort((a, b) => {
+      [...dailyStoreData].sort((a, b) => {
         if (sortCategory === "wait") {
           return sortDirection === "asc"
             ? a.metrics.waitTimeSeconds - b.metrics.waitTimeSeconds
@@ -97,20 +139,23 @@ function DataTable() {
 
         return 0;
       }),
-    [sortCategory, sortDirection]
+    [sortCategory, sortDirection, dailyStoreData]
   );
 
   return (
-    <Paper>
+    <Paper className="grow-1 drop-shadow-lg">
       <TableContainer sx={{ maxHeight: 530 }}>
         <Table stickyHeader>
           <TableHead>
             <TableRow>
               {headCells.map((cell) => (
                 <TableCell
+                  className="sm:!text-lg"
                   key={cell.id}
                   align="left"
-                  sx={{ backgroundColor: "rgb(25, 118, 210)" }}
+                  sx={{
+                    backgroundColor: "rgb(25, 118, 210)",
+                  }}
                 >
                   {["wait", "total"].includes(cell.id) ? (
                     <TableSortLabel
@@ -145,20 +190,30 @@ function DataTable() {
             {sortedRows
               .slice(page * rowsPerPage, (page + 1) * rowsPerPage)
               .map((area) => (
-                <TableRow key={area.locationName}>
-                  <TableCell align="left">{area.locationName}</TableCell>
-                  <TableCell align="center">
+                <TableRow
+                  key={area.locationName}
+                  className="hover:!bg-gray-100"
+                >
+                  <TableCell align="left" className="sm:!text-lg">
+                    {area.locationName}
+                  </TableCell>
+                  <TableCell align="left" className="sm:!text-lg">
                     {area.metrics.waitTimeSeconds}
                   </TableCell>
-                  <TableCell align="center">
+                  <TableCell align="left" className="sm:!text-lg">
                     {area.metrics.workForceUtilization.total}
                   </TableCell>
-                  <TableCell align="left" className="!flex flex-col">
-                    {area.metrics.workForceUtilization.persons.map((p) => (
-                      <span>
-                        {p.firstName} {p.lastName}
-                      </span>
-                    ))}
+                  <TableCell
+                    align="left"
+                    className="!flex flex-col sm:!text-lg"
+                  >
+                    {area.metrics.workForceUtilization.persons.map(
+                      (p: { [key: string]: string }) => (
+                        <span key={p.firstName + p.lastName}>
+                          {p.firstName} {p.lastName}
+                        </span>
+                      )
+                    )}
                   </TableCell>
                 </TableRow>
               ))}
@@ -170,12 +225,59 @@ function DataTable() {
         component="div"
         rowsPerPage={rowsPerPage}
         page={page}
-        count={mockDailyStoreSectionData.length}
+        count={dailyStoreData.length}
         onPageChange={(_event: unknown, newPage: number) => setPage(newPage)}
         onRowsPerPageChange={(event: ChangeEvent<HTMLInputElement>) => {
           setRowsPerPage(+event.target.value);
           setPage(0);
         }}
+      />
+    </Paper>
+  );
+}
+
+function DataChart({
+  dailyStoreData,
+}: {
+  dailyStoreData: { [key: string]: any }[];
+}) {
+  const { locations, waitTime, customers, staff } = dailyStoreData.reduce(
+    (collection, { locationName, metrics }) => {
+      const { waitTimeSeconds, workForceUtilization } = metrics;
+      const { total, persons } = workForceUtilization;
+      collection.locations.push(locationName);
+      collection.waitTime.push(waitTimeSeconds);
+      collection.customers.push(total);
+      collection.staff.push(persons.length);
+      return collection;
+    },
+    { locations: [], waitTime: [], customers: [], staff: [] }
+  );
+
+  return (
+    <Paper className="grow-1 drop-shadow-lg">
+      <BarChart
+        sx={{ maxWidth: "800px", margin: "0 auto" }}
+        xAxis={[{ data: locations }]}
+        series={[
+          { data: waitTime, label: "Waiting time(s)", color: "lightblue" },
+        ]}
+        height={300}
+        barLabel="value"
+      />
+      <BarChart
+        sx={{ maxWidth: "800px", margin: "0 auto" }}
+        xAxis={[{ data: locations }]}
+        series={[{ data: customers, label: "Customers", color: "pink" }]}
+        height={300}
+        barLabel="value"
+      />
+      <BarChart
+        sx={{ maxWidth: "800px", margin: "0 auto" }}
+        xAxis={[{ data: locations }]}
+        series={[{ data: staff, label: "Staff", color: "darkseagreen" }]}
+        height={300}
+        barLabel="value"
       />
     </Paper>
   );
