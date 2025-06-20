@@ -5,7 +5,7 @@ import checker from "vite-plugin-checker";
 
 // https://vite.dev/config/
 export default defineConfig({
-  base: "yq-sass-dashboard/",
+  base: "/yq-sass-dashboard/",
   plugins: [
     react(),
     tailwindcss(),
