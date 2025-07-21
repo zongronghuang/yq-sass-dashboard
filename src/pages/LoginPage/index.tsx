@@ -63,7 +63,7 @@ export default function LoginPage() {
       >
         <fieldset className="flex flex-col justify-between gap-10 mb-5">
           <legend className="text-center mb-5 font-semibold text-2xl sm:text-4xl sm:mb-8">
-            Log In To APP
+            Sign In To APP
           </legend>
 
           <FormControl required className="w-full">
