@@ -18,20 +18,7 @@ permissions:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  check-pnpm:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Ensure pnpm is available
-        run: |
-          if ! command -v pnpm &> /dev/null; then
-            echo "❌ pnpm is not installed"
-            exit 1
-          else
-            echo "✅ pnpm is installed"
-          fi
-
   lint-build-deploy:
-    needs: check-pnpm
     runs-on: ubuntu-latest
 
     # Steps represent a sequence of tasks that will be executed as part of the job
@@ -39,18 +26,21 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Use Node.js 22
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10 # or 10, but 8 is stable with Node 22
+
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: 'pnpm'
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10
+      - name: Check pnpm version
+        run: pnpm --version
 
-      - name: Clean install dependencies (CI)
+      - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
       - name: Run linter
@@ -59,5 +49,15 @@ jobs:
       - name: Build project
         run: pnpm build
 
+      - name: Set Git identity
+        run: |
+          git config user.name "zongronghuang"
+          git config user.email "zongronghuang@users.noreply.github.com"
+
       - name: Deploy to GitHub Pages
-        run: pnpm deploy
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          pnpm exec gh-pages -d dist \
+            -u "zongronghuang <zongronghuang@users.noreply.github.com>" \
+            -r "https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git"
