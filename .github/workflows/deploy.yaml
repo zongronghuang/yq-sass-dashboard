@@ -55,4 +55,9 @@ jobs:
           git config user.email "zongrong.h886@gmail.com"
 
       - name: Deploy to GitHub Pages
-        run: pnpm gh-pages -d dist
+        env:
+          GITHUB_TOKEN: ${{ secrets.MY_ACCESS_TOKEN }}
+        run: |
+          pnpm exec gh-pages -d dist \
+            -u "Zong-Rong Huang <zongrong.h886@gmail.com>" \
+            -r "https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git"
