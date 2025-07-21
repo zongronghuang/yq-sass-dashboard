@@ -49,5 +49,10 @@ jobs:
       - name: Build project
         run: pnpm build
 
+      - name: Set Git identity
+        run: |
+          git config user.name "Zong-Rong Huang"
+          git config user.email "zongrong.h886@gmail.com"
+
       - name: Deploy to GitHub Pages
         run: pnpm gh-pages -d dist
