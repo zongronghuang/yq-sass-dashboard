@@ -51,13 +51,13 @@ jobs:
 
       - name: Set Git identity
         run: |
-          git config user.name "Zong-Rong Huang"
-          git config user.email "zongrong.h886@gmail.com"
+          git config user.name "zongronghuang"
+          git config user.email "zongronghuang@users.noreply.github.com"
 
       - name: Deploy to GitHub Pages
         env:
           GITHUB_TOKEN: ${{ secrets.MY_ACCESS_TOKEN }}
         run: |
           pnpm exec gh-pages -d dist \
-            -u "Zong-Rong Huang <zongrong.h886@gmail.com>" \
+            -u "zongronghuang <zongronghuang@users.noreply.github.com>" \
             -r "https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git"
