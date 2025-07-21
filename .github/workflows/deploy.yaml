@@ -18,19 +18,7 @@ permissions:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  check-pnpm:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Ensure pnpm is available
-        run: |
-          if ! command -v pnpm &> /dev/null; then
-            echo "❌ pnpm is not installed"
-          else
-            echo "✅ pnpm is installed"
-          fi
-
   lint-build-deploy:
-    needs: check-pnpm
     runs-on: ubuntu-latest
 
     # Steps represent a sequence of tasks that will be executed as part of the job
